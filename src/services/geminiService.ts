@@ -1,7 +1,8 @@
 import { Message } from '../types';
 
-// We no longer import GoogleGenAI here. 
-// The frontend only knows how to talk to our own /api/chat endpoint.
+// We DO NOT import GoogleGenAI here.
+// This file runs in the browser, so it must not have API keys.
+// It simply sends a message to our own server.
 
 export const sendMessageStream = async (
   message: string,
@@ -10,8 +11,8 @@ export const sendMessageStream = async (
 ): Promise<string> => {
   
   try {
-    // Filter history to remove error messages or loading states if necessary
-    // and exclude the current message being sent (as it's passed separately)
+    // Filter history to remove error messages or loading states
+    // We send this history to the server so it knows the context
     const validHistory = history.filter(h => !h.isError && !h.isStreaming);
 
     const response = await fetch('/api/chat', {
@@ -36,6 +37,7 @@ export const sendMessageStream = async (
         throw new Error(`Server error: ${response.status}`);
     }
 
+    // Read the stream from our server
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullText = "";
@@ -58,7 +60,6 @@ export const sendMessageStream = async (
 };
 
 export const resetChat = () => {
-  // Since the server is stateless (we pass history every time), 
-  // there is nothing to reset in the service layer.
-  // The UI simply clears its messages state.
+  // The server is stateless (we pass history every time), 
+  // so there is no session to reset on the backend.
 };

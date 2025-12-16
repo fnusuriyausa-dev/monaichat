@@ -65,7 +65,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled }) => {
           </button>
         </form>
         <p className="text-center text-xs text-slate-400 mt-2">
-          Gemini can make mistakes. Please check sensitive information.
+          @ 2025 DEVELOPED BY NSUMON
         </p>
       </div>
     </div>
