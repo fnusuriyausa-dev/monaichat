@@ -1,65 +1,64 @@
-import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
+import { Message, Sender } from '../types';
 
-// Initialize the client
-// The API key is guaranteed to be available in process.env.API_KEY
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-// System instruction to enforce Mon and English languages
-const SYSTEM_INSTRUCTION = `
-You are a helpful, intelligent assistant that speaks ONLY in Mon and English.
-
-RULES:
-1. If the user inputs text in Mon (Burmese script/Mon language), you MUST respond in Mon.
-2. If the user inputs text in English, you MUST respond in English.
-3. If the user inputs text in a mixed language, respond in the language that is most dominant or ask for clarification in both languages.
-4. If the user inputs text in a language other than Mon or English (e.g., Spanish, French, Burmese, Thai), you must politely refuse to answer in that language. You should reply with a standard message in both English and Mon stating that you only support Mon and English.
-5. Keep your responses helpful, polite, and culturally appropriate.
-6. For Mon language, ensure you use proper grammar and vocabulary suitable for a general audience.
-
-CONTEXT:
-The user is using a specialized app designed to bridge communication between English and Mon speakers or to assist native Mon speakers.
-`;
-
-let chatSession: Chat | null = null;
-
-export const getChatSession = (): Chat => {
-  if (!chatSession) {
-    chatSession = ai.chats.create({
-      model: 'gemini-3-pro-preview',
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.7,
-      },
-    });
-  }
-  return chatSession;
-};
+// We no longer import GoogleGenAI here. 
+// The frontend only knows how to talk to our own /api/chat endpoint.
 
 export const sendMessageStream = async (
   message: string,
+  history: Message[],
   onChunk: (text: string) => void
 ): Promise<string> => {
-  const chat = getChatSession();
   
   try {
-    const resultStream = await chat.sendMessageStream({ message });
-    
+    // Filter history to remove error messages or loading states if necessary
+    // and exclude the current message being sent (as it's passed separately)
+    const validHistory = history.filter(h => !h.isError && !h.isStreaming);
+
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message,
+        history: validHistory.map(msg => ({
+          text: msg.text,
+          sender: msg.sender
+        }))
+      }),
+    });
+
+    if (!response.body) {
+      throw new Error("No response body");
+    }
+
+    if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
     let fullText = "";
-    
-    for await (const chunk of resultStream) {
-      const c = chunk as GenerateContentResponse;
-      const chunkText = c.text || "";
-      fullText += chunkText;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      const chunk = decoder.decode(value, { stream: true });
+      fullText += chunk;
       onChunk(fullText);
     }
     
     return fullText;
+
   } catch (error) {
-    console.error("Error sending message to Gemini:", error);
+    console.error("Error sending message to server:", error);
     throw error;
   }
 };
 
 export const resetChat = () => {
-  chatSession = null;
+  // Since the server is stateless (we pass history every time), 
+  // there is nothing to reset in the service layer.
+  // The UI simply clears its messages state.
 };
