@@ -1,4 +1,4 @@
-import { Message, Sender } from '../types';
+import { Message } from '../types';
 
 // We no longer import GoogleGenAI here. 
 // The frontend only knows how to talk to our own /api/chat endpoint.
