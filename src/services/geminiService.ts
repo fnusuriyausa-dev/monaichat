@@ -12,7 +12,6 @@ export const sendMessageStream = async (
   
   try {
     // Filter the history to remove error messages or loading states.
-    // We send this clean history to the backend so the AI remembers the conversation.
     const validHistory = history.filter(h => !h.isError && !h.isStreaming);
 
     // Call our own server

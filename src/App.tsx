@@ -34,6 +34,8 @@ const App: React.FC = () => {
     };
 
     // Capture current history BEFORE updating state to pass to the API
+    // We do NOT include the new userMessage in this history array, 
+    // because the API expects { message: "new text", history: [previous] }
     const currentHistory = [...messages];
 
     setMessages((prev) => [...prev, userMessage]);
