@@ -14,6 +14,7 @@ app.use(express.json());
 
 // Initialize Gemini Client (Server-side only)
 // The API key is safe here because this code runs on the server, not the browser.
+// Ensure process.env.API_KEY is set in your environment variables.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const SYSTEM_INSTRUCTION = `
@@ -37,14 +38,17 @@ app.post('/api/chat', async (req, res) => {
     const { message, history } = req.body;
 
     // Convert frontend message format to Gemini content format
-    const contents = history.map(msg => ({
-      role: msg.sender === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.text }]
-    }));
+    // We filter out any empty messages or errors just in case
+    const contents = history
+      .filter(msg => msg.text && msg.text.trim() !== "")
+      .map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.text }]
+      }));
 
-    // Start a new chat session with the provided history
+    // Create chat with gemini-2.5-flash (Standard model for text tasks)
     const chat = ai.chats.create({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-2.5-flash',
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         temperature: 0.7,

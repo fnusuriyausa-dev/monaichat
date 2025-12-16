@@ -12,9 +12,10 @@ export const sendMessageStream = async (
   
   try {
     // Filter the history to remove error messages or loading states.
+    // We send this clean history to the backend so the AI remembers the conversation.
     const validHistory = history.filter(h => !h.isError && !h.isStreaming);
 
-    // Call our own server
+    // Call our own server endpoint
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -35,7 +36,8 @@ export const sendMessageStream = async (
     }
 
     if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`Server error: ${response.status} - ${errorText}`);
     }
 
     // Read the stream coming from server.js

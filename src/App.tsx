@@ -34,8 +34,10 @@ const App: React.FC = () => {
     };
 
     // Capture current history BEFORE updating state to pass to the API
-    // We do NOT include the new userMessage in this history array, 
-    // because the API expects { message: "new text", history: [previous] }
+    // We do NOT include the new userMessage in this history array here, 
+    // because the API service will handle sending the current message separately if needed,
+    // OR we can pass it. The server expects { message, history }. 
+    // Usually 'history' is "messages before the current one".
     const currentHistory = [...messages];
 
     setMessages((prev) => [...prev, userMessage]);
@@ -81,7 +83,7 @@ const App: React.FC = () => {
           msg.id === botMessageId 
             ? { 
                 ...msg, 
-                text: "Sorry, I encountered an error while processing your request. Please try again.\n\nဂွံအာလောတ်ရ၊ ဒုင်ဂုဏ်ရ။ ပ္ဍဲအရာမကၠောန်စွံမၞးဂှ် ပြသၞာနွံဒၟံင်ရ။ ဆက်ဆောံကဵုအဲမွဲဝါပၠန်ညိ။",
+                text: "Sorry, I encountered an error while connecting to the server. Please ensure the server is running and try again.\n\nဂွံအာလောတ်ရ၊ ဒုင်ဂုဏ်ရ။ ဆက်ဆောံကဵုအဲမွဲဝါပၠန်ညိ။",
                 isError: true, 
                 isStreaming: false 
               } 
