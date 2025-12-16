@@ -9,7 +9,7 @@ const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome-1',
-      text: "Hello! I am your bilingual assistant. I can speak English and Mon. How can I help you today?\n\nမ္ၚဵုရ။ အဲဂှ် ဒှ် ညးမရီုဗင်ၜါဘာသာ သွက် မၞး ရ။ အဲ ဟီု ဘာသာအၚ်္ဂလိက် ကဵု ဘာသာမန် လေပ် ရ။ တ္ၚဲဏအ် အဲ ရီုဗင် ကဵု မၞး ဗီုလဵု ရော?",
+      text: "Hello! I am your bilingual assistant. I can speak English and Mon. How can I help you today?\n\nမင်္ဂလာပါ! အဲကျွန် ဂွံရီုဗင် ဘာသာမန် ကဵု အင်္ဂလိက် ၜါဘာသာရ။ မုဂွံရီုဗင်ကဵုရော?",
       sender: Sender.BOT,
       timestamp: new Date(),
     }
@@ -33,10 +33,7 @@ const App: React.FC = () => {
       timestamp: new Date(),
     };
 
-    // We keep a reference to the current history BEFORE adding the new message
-    // to pass to the API (excluding the welcome message if you prefer, 
-    // but usually we want to keep context).
-    // Note: The service now expects the full history including the previous interactions.
+    // Capture current history BEFORE updating state to pass to the API
     const currentHistory = [...messages];
 
     setMessages((prev) => [...prev, userMessage]);
@@ -55,7 +52,7 @@ const App: React.FC = () => {
     setMessages((prev) => [...prev, botMessagePlaceholder]);
 
     try {
-      // We pass the current text AND the history to the backend
+      // Pass text AND history to the service
       await sendMessageStream(text, currentHistory, (streamedText) => {
         setMessages((prev) => 
           prev.map((msg) => 
@@ -131,8 +128,8 @@ const App: React.FC = () => {
                </svg>
             </div>
             <div>
-              <h1 className="font-bold text-slate-800 text-lg leading-tight">NSUMON</h1>
-              <p className="text-xs text-slate-500 font-medium">Mon-English Chat</p>
+              <h1 className="font-bold text-slate-800 text-lg leading-tight">Mon-English Chat</h1>
+              <p className="text-xs text-slate-500 font-medium">ချက်ပေါတ် မန်-အင်္ဂလိက်</p>
             </div>
           </div>
           

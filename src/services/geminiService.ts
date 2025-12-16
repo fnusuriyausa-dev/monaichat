@@ -1,8 +1,8 @@
 import { Message } from '../types';
 
-// We DO NOT import GoogleGenAI here.
-// This file runs in the browser, so it must not have API keys.
-// It simply sends a message to our own server.
+// NOTE: This file runs in the browser. 
+// It MUST NOT import @google/genai or use process.env.API_KEY.
+// Its only job is to send the message to our own server (server.js).
 
 export const sendMessageStream = async (
   message: string,
@@ -11,10 +11,11 @@ export const sendMessageStream = async (
 ): Promise<string> => {
   
   try {
-    // Filter history to remove error messages or loading states
-    // We send this history to the server so it knows the context
+    // Filter the history to remove error messages or loading states.
+    // We send this clean history to the backend so the AI remembers the conversation.
     const validHistory = history.filter(h => !h.isError && !h.isStreaming);
 
+    // Call our own server
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -22,6 +23,7 @@ export const sendMessageStream = async (
       },
       body: JSON.stringify({
         message,
+        // We map the message to a simple structure to send over the network
         history: validHistory.map(msg => ({
           text: msg.text,
           sender: msg.sender
@@ -37,7 +39,7 @@ export const sendMessageStream = async (
         throw new Error(`Server error: ${response.status}`);
     }
 
-    // Read the stream from our server
+    // Read the stream coming from server.js
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullText = "";
@@ -61,5 +63,5 @@ export const sendMessageStream = async (
 
 export const resetChat = () => {
   // The server is stateless (we pass history every time), 
-  // so there is no session to reset on the backend.
+  // so there is no session object to reset here.
 };
