@@ -13,13 +13,20 @@ const PORT = process.env.PORT || 3000;
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// Check for API Key
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
+// Initialize Gemini Client
+// We initialize this lazily in the route or check it on startup
 if (!process.env.API_KEY) {
-  console.error("ERROR: API_KEY is missing in environment variables.");
-  console.error("Please create a .env file in the root directory with API_KEY=your_key_here");
+  console.error("CRITICAL ERROR: API_KEY is missing in environment variables.");
+} else {
+  console.log("API_KEY is present.");
 }
 
-// Initialize Gemini Client (Server-side only)
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const SYSTEM_INSTRUCTION = `
@@ -40,7 +47,13 @@ The user is using a specialized app designed to bridge communication between Eng
 // API Endpoint for Chat
 app.post('/api/chat', async (req, res) => {
   try {
+    if (!process.env.API_KEY) {
+      console.error("Attempted to chat without API Key");
+      return res.status(500).json({ error: 'Server configuration error: API Key missing' });
+    }
+
     const { message, history } = req.body;
+    console.log("Received chat request. Message length:", message?.length);
 
     // Convert frontend message format to Gemini content format
     const contents = history
@@ -77,19 +90,25 @@ app.post('/api/chat', async (req, res) => {
 
   } catch (error) {
     console.error('Error in /api/chat:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    // Don't send JSON if headers are already sent (streaming started)
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal Server Error' });
+    } else {
+      res.end();
+    }
   }
 });
 
 // Serve static files from the 'dist' directory (Vite build output)
-app.use(express.static(join(__dirname, 'dist')));
+const distPath = join(__dirname, 'dist');
+app.use(express.static(distPath));
 
 // Handle client-side routing by serving index.html for all other routes
 app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, 'dist', 'index.html'));
+  res.sendFile(join(distPath, 'index.html'));
 });
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-  console.log(`Open http://localhost:${PORT} in your browser`);
+  console.log(`Serving static files from: ${distPath}`);
 });
