@@ -20,7 +20,6 @@ app.use((req, res, next) => {
 });
 
 // Initialize Gemini Client
-// We initialize this lazily in the route or check it on startup
 if (!process.env.API_KEY) {
   console.error("CRITICAL ERROR: API_KEY is missing in environment variables.");
 } else {

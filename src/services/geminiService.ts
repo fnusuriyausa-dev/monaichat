@@ -1,8 +1,7 @@
 import { Message } from '../types';
 
 // NOTE: This file runs in the browser. 
-// It MUST NOT import @google/genai or use process.env.API_KEY.
-// Its only job is to send the message to our own server (server.js).
+// It uses fetch to send data to our own backend server (server.js).
 
 export const sendMessageStream = async (
   message: string,
@@ -16,7 +15,7 @@ export const sendMessageStream = async (
     const validHistory = history.filter(h => !h.isError && !h.isStreaming);
 
     // Call our own server endpoint
-    // The server is running on the same domain, so /api/chat works relative to the page.
+    // Relative URL works because frontend and backend are on the same origin
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -24,7 +23,7 @@ export const sendMessageStream = async (
       },
       body: JSON.stringify({
         message,
-        // We map the message to a simple structure to send over the network
+        // Map to a simple structure
         history: validHistory.map(msg => ({
           text: msg.text,
           sender: msg.sender
@@ -64,6 +63,5 @@ export const sendMessageStream = async (
 };
 
 export const resetChat = () => {
-  // The server is stateless (we pass history every time), 
-  // so there is no session object to reset here.
+  // Stateless reset (handled by frontend clearing history array)
 };
