@@ -16,6 +16,7 @@ export const sendMessageStream = async (
     const validHistory = history.filter(h => !h.isError && !h.isStreaming);
 
     // Call our own server endpoint
+    // The server is running on the same domain, so /api/chat works relative to the page.
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {

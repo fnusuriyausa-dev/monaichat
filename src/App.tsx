@@ -36,7 +36,6 @@ const App: React.FC = () => {
     // Capture current history BEFORE updating state to pass to the API
     // We do NOT include the new userMessage in this history array here, 
     // because the API service will handle sending the current message separately if needed.
-    // The server expects { message, history }, where history is the past context.
     const currentHistory = [...messages];
 
     setMessages((prev) => [...prev, userMessage]);
@@ -55,7 +54,7 @@ const App: React.FC = () => {
     setMessages((prev) => [...prev, botMessagePlaceholder]);
 
     try {
-      // Pass text AND history to the service
+      // CRITICAL UPDATE: Pass 'currentHistory' as the second argument
       await sendMessageStream(text, currentHistory, (streamedText) => {
         setMessages((prev) => 
           prev.map((msg) => 
