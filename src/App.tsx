@@ -33,9 +33,6 @@ const App: React.FC = () => {
       timestamp: new Date(),
     };
 
-    // Capture current history BEFORE updating state to pass to the API
-    const currentHistory = [...messages];
-
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
@@ -52,8 +49,8 @@ const App: React.FC = () => {
     setMessages((prev) => [...prev, botMessagePlaceholder]);
 
     try {
-      // Pass text AND history to the service
-      await sendMessageStream(text, currentHistory, (streamedText) => {
+      // We pass 'messages' just to match the signature, but the service uses internal state
+      await sendMessageStream(text, messages, (streamedText) => {
         setMessages((prev) => 
           prev.map((msg) => 
             msg.id === botMessageId 
@@ -74,12 +71,20 @@ const App: React.FC = () => {
 
     } catch (error) {
       console.error("Failed to send message:", error);
+      
+      let errorMessage = "Sorry, I encountered an error. Please try again.\n\nဂွံအာလောတ်ရ၊ ဒုင်ဂုဏ်ရ။ ဆက်ဆောံကဵုအဲမွဲဝါပၠန်ညိ။";
+      
+      // Provide a helpful hint if it's likely an API Key issue
+      if (error instanceof Error && error.message.includes("API Key")) {
+        errorMessage = "Configuration Error: API Key is missing. Please check your Render settings.\n\nAPI Key ဟွံမွဲ";
+      }
+
       setMessages((prev) => 
         prev.map((msg) => 
           msg.id === botMessageId 
             ? { 
                 ...msg, 
-                text: "Sorry, I encountered an error while connecting to the server. Please ensure the server is running and try again.\n\nဂွံအာလောတ်ရ၊ ဒုင်ဂုဏ်ရ။ ဆက်ဆောံကဵုအဲမွဲဝါပၠန်ညိ။",
+                text: errorMessage,
                 isError: true, 
                 isStreaming: false 
               } 
