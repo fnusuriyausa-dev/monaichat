@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -12,9 +13,13 @@ const PORT = process.env.PORT || 3000;
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+// Check for API Key
+if (!process.env.API_KEY) {
+  console.error("ERROR: API_KEY is missing in environment variables.");
+  console.error("Please create a .env file in the root directory with API_KEY=your_key_here");
+}
+
 // Initialize Gemini Client (Server-side only)
-// The API key is safe here because this code runs on the server, not the browser.
-// Ensure process.env.API_KEY is set in your environment variables.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const SYSTEM_INSTRUCTION = `
@@ -38,7 +43,6 @@ app.post('/api/chat', async (req, res) => {
     const { message, history } = req.body;
 
     // Convert frontend message format to Gemini content format
-    // We filter out any empty messages or errors just in case
     const contents = history
       .filter(msg => msg.text && msg.text.trim() !== "")
       .map(msg => ({
@@ -46,7 +50,7 @@ app.post('/api/chat', async (req, res) => {
         parts: [{ text: msg.text }]
       }));
 
-    // Create chat with gemini-2.5-flash (Standard model for text tasks)
+    // Create chat with gemini-2.5-flash
     const chat = ai.chats.create({
       model: 'gemini-2.5-flash',
       config: {
@@ -87,4 +91,5 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(`Open http://localhost:${PORT} in your browser`);
 });
